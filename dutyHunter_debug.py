@@ -7,13 +7,10 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 # Вычитываем все account_id, удовлетворяющие условию
-city = "Краснобродский, пгт."
-house_type = "1"
 raw_select = f"""SELECT DISTINCT account_id 
                 FROM public.balance b JOIN public.personal_account p_a 
                 ON b.account_id = p_a.id 
-                AND p_a.city='{city}' 
-                AND p_a.house_type='{house_type}';"""
+                AND b.account_id=263988;"""
 
 cur.execute(raw_select)
 
@@ -50,6 +47,8 @@ for i in id_s:
 # payment,              6
 # saldo_k,              7
 # code_account          8
+
+#print(fetched)
 
 total = []  # Результаты выполнения скрипта расчета для всех записей
 
@@ -147,20 +146,24 @@ for result in fetched:
                         account_id,
                     ]
                 )
+                print("before_break 149", balance_date)
+
                 break
 
 
         # При отстутствии начислений в текущем месяце
-        if new_accrual <= 0:
+        if new_sum_accrual <= 0:
 #            if account_id==876036:
-#            print("new_accrual <= 0",balance_date, new_saldo_k)
+#                print("new_accrual <= 0",balance_date, new_saldo_k)
+            print("before_continue 158", balance_date, new_sum_accrual, duty)
             continue
          
 
- #       if account_id==876036:
- #           print(">",balance_date, new_saldo_k, i, "/", len(result))
+#        if account_id==876036:
+#            print(">",balance_date, new_saldo_k, i, "/", len(result))
 
         # Определение duty
+        print(balance_date, new_saldo_k, new_sum_accrual)
         if new_saldo_k <= new_sum_accrual:
             duty = new_saldo_k
         else:
@@ -179,6 +182,7 @@ for result in fetched:
                         result[i][0],
                     ]
                 )
+            print("before_break 184", balance_date)
             break
         else:
             months.append(
@@ -192,7 +196,7 @@ for result in fetched:
             )
 
     # Производим дозапись в журнал отладки
-    with open(city + house_type + ".csv", "a") as f:
+    with open("city" + "house_type" + ".csv", "a") as f:
         for month in months:
             for line in month:
                 f.write(str(line) + ";")
@@ -211,4 +215,4 @@ for date in dates:
                 if date in i[0]:
                     duty_sum += i[1]
 
-    print(f"{date}", duty_sum)
+    #print(f"{date}", duty_sum)
